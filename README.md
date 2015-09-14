@@ -1,12 +1,15 @@
 SqlBeautifier
 ============================
 
-This is a SQL formatter plugin using [python-sqlparse](https://code.google.com/p/python-sqlparse/) for both Sublime 2 and 3. 
+This is a SQL formatter plugin using [python-sqlparse](https://github.com/andialbrecht/sqlparse) for both Sublime 2 and 3.
 
 Enjoy!
 
 ### Installation
-Please install Sublime [Package Control](https://sublime.wbond.net/installation) first. Then inside *Package Control: Install Package*, type *SqlBeautifier* and then click to confirm.
+* please install Sublime [Package Control](https://sublime.wbond.net/installation) first
+* also install [python-sqlparse](https://github.com/andialbrecht/sqlparse) to get ``sqlformat``
+* use package control to install [SublimeFixMacPath](https://github.com/int3h/SublimeFixMacPath) to make your normal command line accesible to sublime
+* use package control to install *SqlBeautifier*
 
 
 ###Settings
