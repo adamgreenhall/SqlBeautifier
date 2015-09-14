@@ -1,18 +1,14 @@
-import sublime, sublime_plugin
-
-import sys
-import os
-
-sys.path.append(os.path.dirname(__file__))
-
-if sys.version_info >= (3, 0):
-    import sqlparse3 as sqlparse
-else:
-    import sqlparse2 as sqlparse
-
+import logging
+import sublime
+import sublime_plugin
+import subprocess
+import tempfile
+# import os
+# os.system('export PATH="/Users/adam/code/anaconda/bin:$PATH"')
 
 # for ST2
 settings = sublime.load_settings('SQL Beautifier.sublime-settings')
+
 
 # for ST3
 def plugin_loaded():
@@ -21,18 +17,39 @@ def plugin_loaded():
 
 
 class SqlBeautifierCommand(sublime_plugin.TextCommand):
+    setting_kwds = (
+        'keyword_case',
+        'identifier_case',
+        'reindent',
+        'indent_width')
+
+    settings_bool = (
+        'strip_comments',
+        'reindent_aligned',
+        'use_space_around_operators')
+
+    def _settings_to_argparse(self):
+        args = []
+        for k in self.setting_kwds:
+            val = settings.get(k)
+            if val is not None:
+                args.append('--{} {}'.format(str(k), str(val)))
+        for k in self.settings_bool:
+            val = settings.get(k)
+            if val:
+                args.append('--{}'.format(str(k)))
+        return ' '.join(args)
+
     def format_sql(self, raw_sql):
         try:
-            return sqlparse.format(raw_sql, 
-                keyword_case=settings.get("keyword_case"),
-                identifier_case=settings.get("identifier_case"),
-                strip_comments=settings.get("strip_comments"),
-                indent_tabs=settings.get("indent_tabs"),
-                indent_width=settings.get("indent_width"),
-                reindent=settings.get("reindent") 
-            )
+            fnm = '/tmp/sqlformat.tmp'
+            with open(fnm, 'w+') as tmp:
+                tmp.write(raw_sql)
+            cmd = 'sqlformat {} {}'.format(fnm, self._settings_to_argparse())
+            out = subprocess.check_output(cmd, shell=True, universal_newlines=True)
+            return str(out)
         except Exception as e:
-            print(e)
+            logging.exception(e)
             return None
 
     def replace_region_with_formatted_sql(self, edit, region):
@@ -41,9 +58,6 @@ class SqlBeautifierCommand(sublime_plugin.TextCommand):
         self.view.replace(edit, region, foramtted_text)
 
     def run(self, edit):
-        window = self.view.window()
-        view = window.active_view()
-
         for region in self.view.sel():
             if region.empty():
                 selection = sublime.Region(0, self.view.size())
